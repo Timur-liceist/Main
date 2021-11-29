@@ -1,4 +1,6 @@
 import pygame
+
+
 class Board:
     # создание поля
     def __init__(self, width, height):
@@ -15,34 +17,51 @@ class Board:
         self.left = left
         self.top = top
         self.cell_size = cell_size
-    def set_view(self, screen, x, y, width, height):
-        t, u = x, y
-        len_cletki = width // self.width
-        for i in range(self.height):
-            u += len_cletki
-            t = x
-            for j in range(self.width):
-                if self.board[i][j] == 0:
-                    pygame.draw.rect(screen, "white", (t, u, len_cletki, len_cletki), 1)
+
+    def render(self, screen):
+        for w in range(self.width):
+            for h in range(self.height):
+                x = self.left + w * self.cell_size
+                y = self.top + h * self.cell_size
+                if self.board[h][w]:
+                    pygame.draw.rect(screen, "white", (x, y, self.cell_size, self.cell_size), 0)
                 else:
-                    pygame.draw.rect(screen, "white", (t, u, len_cletki, len_cletki), 0)
-                t += len_cletki
-    def get_cell(self, pos):
-        x, y = pos
-        for i in
+                    pygame.draw.rect(screen, "white", (x, y, self.cell_size, self.cell_size), 1)
+
+    def get_cell(self, mouse_pos):
+        if ((self.left < mouse_pos[0] < self.left + self.cell_size * self.width) and (
+                self.top < mouse_pos[1] < self.top + self.cell_size * self.height)):
+            column = (mouse_pos[0] - self.left) // self.cell_size
+            row = (mouse_pos[1] - self.top) // self.cell_size
+            return (row, column)
+        return None
+
+    def on_click(self, cell):
+        for x in range(self.width):
+            self.board[cell[0]][x] = (self.board[cell[0]][x] + 1) % 2
+        for y in range(self.height):
+            self.board[y][cell[1]] = (self.board[y][cell[1]] + 1) % 2
+        self.board[cell[0]][cell[1]] = (self.board[cell[0]][cell[1]] + 1) % 2
+        # if self.board[cell_coords[1]][cell_coords[0]]:
+        #     self.board[cell_coords[1]][cell_coords[0]] = 0
+        # else:
+        #     self.board[cell_coords[1]][cell_coords[0]] = 1
+
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
         self.on_click(cell)
-        print(22)
+
+
 screen = pygame.display.set_mode((300, 300))
-board = Board(4, 3)
+board = Board(5, 7)
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
-            board.get_click(event.pos)
+            if board.get_cell(event.pos):
+                board.on_click(board.get_cell(event.pos))
     screen.fill((0, 0, 0))
-    board.set_view(screen, 50, 50, 100, 50)
+    board.render(screen)
     pygame.display.flip()
